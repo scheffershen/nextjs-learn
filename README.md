@@ -7,6 +7,8 @@ For more information, see the [course curriculum](https://nextjs.org/learn) on t
 ## reference 
 
 - https://qufei1993.github.io/nextjs-learn-cn/chapter1
+- https://github.com/qufei1993/nextjs-learn-example/blob/main/scripts/seed.js
+  
 
 ## date
 
@@ -31,3 +33,7 @@ For more information, see the [course curriculum](https://nextjs.org/learn) on t
 	$ npm i --legacy-peer-deps
 
 	$ npm run dev
+
+	$ npm i @vercel/postgres
+
+	$ npm run seed
