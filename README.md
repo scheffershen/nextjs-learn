@@ -37,3 +37,7 @@ For more information, see the [course curriculum](https://nextjs.org/learn) on t
 	$ npm i @vercel/postgres --legacy-peer-deps
 
 	$ npm run seed
+
+## references
+
+- https://nextjs.org/learn/dashboard-app/setting-up-your-database
