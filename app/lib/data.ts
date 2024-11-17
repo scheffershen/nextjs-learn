@@ -90,16 +90,16 @@ export async function fetchCardData() { //Parallel data fetching
     // You can probably combine these into a single SQL query
     // However, we are intentionally splitting them to demonstrate
     // how to initialize multiple queries in parallel with JS.
-    const invoiceCountPromise = client.sql`
+    const invoiceCountPromise = client.query`
       SELECT COALESCE(COUNT(*), 0) as total 
       FROM invoices`;
 
-    const customerCountPromise = client.sql`
+    const customerCountPromise = client.query`
       SELECT COALESCE(COUNT(*), 0) as total 
       FROM customers`;
 
     // Optimize the status query using conditional aggregation
-    const invoiceStatusPromise = client.sql`
+    const invoiceStatusPromise = client.query`
       SELECT 
         COALESCE(SUM(IF(status = 'paid', amount, 0)), 0) AS paid,
         COALESCE(SUM(IF(status = 'pending', amount, 0)), 0) AS pending
@@ -140,7 +140,7 @@ export async function fetchFilteredInvoices(
 
   try {
     const client = await getClient();
-    const invoices = await client.sql<InvoicesTable>`
+    const invoices = await client.query(`
       SELECT
         invoices.id,
         invoices.amount,
@@ -152,16 +152,25 @@ export async function fetchFilteredInvoices(
       FROM invoices
       JOIN customers ON invoices.customer_id = customers.id
       WHERE
-        customers.name ILIKE ${`%${query}%`} OR
-        customers.email ILIKE ${`%${query}%`} OR
-        invoices.amount::text ILIKE ${`%${query}%`} OR
-        invoices.date::text ILIKE ${`%${query}%`} OR
-        invoices.status ILIKE ${`%${query}%`}
+        LOWER(customers.name) LIKE LOWER(?) OR
+        LOWER(customers.email) LIKE LOWER(?) OR
+        LOWER(CAST(invoices.amount AS CHAR)) LIKE LOWER(?) OR
+        LOWER(CAST(invoices.date AS CHAR)) LIKE LOWER(?) OR
+        LOWER(invoices.status) LIKE LOWER(?)
       ORDER BY invoices.date DESC
-      LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
-    `;
+      LIMIT ? OFFSET ?`,
+      [
+        `%${query}%`,
+        `%${query}%`,
+        `%${query}%`,
+        `%${query}%`,
+        `%${query}%`,
+        ITEMS_PER_PAGE,
+        offset
+      ]
+    );
 
-    return invoices.rows;
+    return invoices;
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch invoices.');
@@ -171,7 +180,7 @@ export async function fetchFilteredInvoices(
 export async function fetchInvoicesPages(query: string) {
   try {
     const client = await getClient();
-    const count = await client.sql`SELECT COUNT(*)
+    const count = await client.query`SELECT COUNT(*)
     FROM invoices
     JOIN customers ON invoices.customer_id = customers.id
     WHERE
@@ -193,7 +202,7 @@ export async function fetchInvoicesPages(query: string) {
 export async function fetchInvoiceById(id: string) {
   try {
     const client = await getClient();
-    const data = await client.sql<InvoiceForm>`
+    const data = await client.query<InvoiceForm>`
       SELECT
         invoices.id,
         invoices.customer_id,
@@ -219,7 +228,7 @@ export async function fetchInvoiceById(id: string) {
 export async function fetchCustomers() {
   try {
     const client = await getClient();
-    const data = await client.sql<CustomerField>`
+    const data = await client.query<CustomerField>`
       SELECT
         id,
         name

@@ -98,3 +98,9 @@ If you encounter database connection issues:
 - Use PHPMyAdmin to inspect database structure and data
 - Check Docker container status with `docker-compose ps`
 - Monitor logs with `docker-compose logs -f`
+
+## Database Seeding
+
+To seed the database:
+
+	$ node scripts/seed.js
