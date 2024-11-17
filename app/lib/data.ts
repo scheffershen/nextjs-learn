@@ -66,12 +66,20 @@ export async function fetchCardData() { //Parallel data fetching
     // You can probably combine these into a single SQL query
     // However, we are intentionally splitting them to demonstrate
     // how to initialize multiple queries in parallel with JS.
-    const invoiceCountPromise = client.sql`SELECT COUNT(*) FROM invoices`;
-    const customerCountPromise = client.sql`SELECT COUNT(*) FROM customers`;
-    const invoiceStatusPromise = client.sql`SELECT
-         SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) AS "paid",
-         SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) AS "pending"
-         FROM invoices`;
+    const invoiceCountPromise = client.sql`
+      SELECT COALESCE(COUNT(*), 0) as total 
+      FROM invoices`;
+
+    const customerCountPromise = client.sql`
+      SELECT COALESCE(COUNT(*), 0) as total 
+      FROM customers`;
+
+    // Optimize the status query using conditional aggregation
+    const invoiceStatusPromise = client.sql`
+      SELECT 
+        COALESCE(SUM(IF(status = 'paid', amount, 0)), 0) AS paid,
+        COALESCE(SUM(IF(status = 'pending', amount, 0)), 0) AS pending
+      FROM invoices`;
 
     const data = await Promise.all([
       invoiceCountPromise,
@@ -79,10 +87,11 @@ export async function fetchCardData() { //Parallel data fetching
       invoiceStatusPromise,
     ]);
 
-    const numberOfInvoices = Number(data[0].rows[0].count ?? '0');
-    const numberOfCustomers = Number(data[1].rows[0].count ?? '0');
-    const totalPaidInvoices = formatCurrency(data[2].rows[0].paid ?? '0');
-    const totalPendingInvoices = formatCurrency(data[2].rows[0].pending ?? '0');
+    // Use the explicit column names from our queries
+    const numberOfInvoices = Number(data[0].rows[0].total);
+    const numberOfCustomers = Number(data[1].rows[0].total);
+    const totalPaidInvoices = formatCurrency(data[2].rows[0].paid);
+    const totalPendingInvoices = formatCurrency(data[2].rows[0].pending);
 
     console.log('Data fetch completed after 3 seconds.');
 

@@ -56,7 +56,7 @@ async function seedInvoices(client) {
         amount INT NOT NULL,
         status VARCHAR(255) NOT NULL,
         date DATE NOT NULL,
-        UNIQUE KEY unique_customer_id (customer_id(36))
+        FOREIGN KEY (customer_id) REFERENCES customers(id)
       );
     `;
 
@@ -66,7 +66,7 @@ async function seedInvoices(client) {
     const insertedInvoices = await Promise.all(
       invoices.map(
         (invoice) => client.sql`
-          INSERT IGNORE INTO invoices (customer_id, amount, status, date)
+          INSERT INTO invoices (customer_id, amount, status, date)
           VALUES (${invoice.customer_id}, ${invoice.amount}, ${invoice.status}, ${invoice.date});
         `,
       ),

@@ -25,6 +25,12 @@ export default async function CardWrapper() {
   return (
     <>
       {/* NOTE: Uncomment this code in Chapter 9 */}
+      {console.log('Card Values:', {
+        totalPaidInvoices,
+        totalPendingInvoices,
+        numberOfInvoices,
+        numberOfCustomers
+      })}
 
       <Card title="Collected" value={totalPaidInvoices} type="collected" />
       <Card title="Pending" value={totalPendingInvoices} type="pending" />
