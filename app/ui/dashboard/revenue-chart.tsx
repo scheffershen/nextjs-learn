@@ -12,6 +12,8 @@ import { fetchRevenue } from '@/app/lib/data';
 export default async function RevenueChart() { // Make component async, remove the props
   const revenue = await fetchRevenue(); // Fetch data inside the component
   
+  console.log('Revenue data:', revenue[0])
+
   const chartHeight = 350;
   // NOTE: Uncomment this code in Chapter 7
 
@@ -39,7 +41,7 @@ export default async function RevenueChart() { // Make component async, remove t
             ))}
           </div>
 
-          {revenue.map((month) => (
+          {revenue[0].map((month) => (
             <div key={month.month} className="flex flex-col items-center gap-2">
               <div
                 className="w-full rounded-md bg-blue-300"

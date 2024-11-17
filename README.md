@@ -64,14 +64,20 @@ If you need to reset the database:
 
 	$ node scripts/seed.js
 
-
 ## References
 
 - [Next.js Documentation](https://nextjs.org/docs)
 - [MySQL Documentation](https://dev.mysql.com/doc/)
 - [Original Course](https://nextjs.org/learn/dashboard-app)
 
-## Date
+## Version Information
+
+- Next.js: ^14.0.0
+- Node.js: >=18.17.0
+- MySQL: 8.0
+- Docker Compose: v2.x
+
+## Last Updated
 
 10/2024
 

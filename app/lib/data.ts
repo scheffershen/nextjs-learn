@@ -11,21 +11,43 @@ import { formatCurrency } from './utils';
 
 export async function fetchRevenue() {
   try {
-    // Artificially delay a response for demo purposes.
-    // Don't do this in production :)
-
     console.log('Fetching revenue data...');
-    await new Promise((resolve) => setTimeout(resolve, 9000));
     
     const client = await getClient();
-    // MySQL version - removed template literal syntax
+    
+    // Add debugging for client connection
+    console.log('Database client connected:', !!client);
+    
+    // MySQL version with better error handling and debugging
     const data = await client.query('SELECT * FROM revenue');
+    
+    // Debug the response
+    console.log('Revenue data received:', {
+      rowCount: data?.length,
+      firstRow: data?.[0],
+      isArray: Array.isArray(data)
+    });
 
-    console.log('Data fetch completed after 9 seconds.');
-    return data; // MySQL returns rows directly
+    // Validate data
+    if (!data || data.length === 0) {
+      console.warn('No revenue data found in database');
+      return []; // Return empty array instead of null/undefined
+    }
+
+    console.log('Data fetch completed successfully');
+    return data;
+    
   } catch (error) {
-    console.error('Database Error:', error);
-    throw new Error('Failed to fetch revenue data.');
+    // Enhanced error logging
+    console.error('Database Error:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    });
+    throw new Error(`Failed to fetch revenue data: ${error.message}`);
+  } finally {
+    // Optional: Close client connection if needed
+    // await client?.end();
   }
 }
 

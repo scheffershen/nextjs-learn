@@ -22,17 +22,45 @@ export const formatDateToLocal = (
 };
 
 export const generateYAxis = (revenue: Revenue[]) => {
-  // Calculate what labels we need to display on the y-axis
-  // based on highest record and in 1000s
-  const yAxisLabels = [];
-  const highestRecord = Math.max(...revenue.map((month) => month.revenue));
-  const topLabel = Math.ceil(highestRecord / 1000) * 1000;
-
-  for (let i = topLabel; i >= 0; i -= 1000) {
-    yAxisLabels.push(`$${i / 1000}K`);
+  // First check if revenue array exists and has data
+  if (!revenue || !Array.isArray(revenue) || revenue.length === 0) {
+    console.error('Invalid or empty revenue data:', revenue)
+    return { yAxisLabels: [], topLabel: 0 }
   }
 
-  return { yAxisLabels, topLabel };
+  //console.log('Revenue data:', JSON.stringify(revenue, null, 2))
+  
+  // Log the mapped revenue values to verify the data
+  const revenueNumbers = revenue[0].map((month) => month.revenue)
+  console.log('Mapped revenue values:', revenueNumbers)
+  
+  // Check if all revenue values are valid numbers
+  if (revenueNumbers.some(val => typeof val !== 'number')) {
+    console.error('Invalid revenue values detected:', revenueNumbers)
+    return { yAxisLabels: [], topLabel: 0 }
+  }
+
+  const highestRecord = Math.max(...revenueNumbers)
+  console.log('Highest record:', highestRecord)
+
+  // Verify the calculation steps
+  const topLabel = Math.ceil(highestRecord / 1000) * 1000
+  console.log('Top label calculation:', {
+    highestRecord,
+    divided: highestRecord / 1000,
+    ceiling: Math.ceil(highestRecord / 1000),
+    final: topLabel
+  })
+
+  const yAxisLabels = []
+  for (let i = topLabel; i >= 0; i -= 1000) {
+    yAxisLabels.push(`$${i / 1000}K`)
+  }
+
+  console.log('Y-axis labels:', yAxisLabels)
+  console.log('Top label:', topLabel)
+  
+  return { yAxisLabels, topLabel }
 };
 
 export const generatePagination = (currentPage: number, totalPages: number) => {
