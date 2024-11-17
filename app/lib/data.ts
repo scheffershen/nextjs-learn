@@ -21,7 +21,7 @@ export async function fetchRevenue() {
     const client = await getClient();
     const data = await client.sql<Revenue>`SELECT * FROM revenue`;
 
-    console.log('Data fetch completed after 3 seconds.');
+    console.log('Data fetch completed after 9 seconds.');
 
     return data.rows;
   } catch (error) {
@@ -32,6 +32,10 @@ export async function fetchRevenue() {
 
 export async function fetchLatestInvoices() {
   try {
+
+    console.log('Fetching latest invoice data...');
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+
     const client = await getClient();
     const data = await client.sql<LatestInvoiceRaw>`
       SELECT invoices.amount, customers.name, customers.image_url, customers.email, invoices.id
@@ -44,6 +48,8 @@ export async function fetchLatestInvoices() {
       ...invoice,
       amount: formatCurrency(invoice.amount),
     }));
+    console.log('Data fetch completed after 5 seconds.');
+
     return latestInvoices;
   } catch (error) {
     console.error('Database Error:', error);
@@ -53,6 +59,9 @@ export async function fetchLatestInvoices() {
 
 export async function fetchCardData() { //Parallel data fetching
   try {
+    console.log('Fetching card data...');
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
     const client = await getClient();
     // You can probably combine these into a single SQL query
     // However, we are intentionally splitting them to demonstrate
@@ -74,6 +83,8 @@ export async function fetchCardData() { //Parallel data fetching
     const numberOfCustomers = Number(data[1].rows[0].count ?? '0');
     const totalPaidInvoices = formatCurrency(data[2].rows[0].paid ?? '0');
     const totalPendingInvoices = formatCurrency(data[2].rows[0].pending ?? '0');
+
+    console.log('Data fetch completed after 3 seconds.');
 
     return {
       numberOfCustomers,
