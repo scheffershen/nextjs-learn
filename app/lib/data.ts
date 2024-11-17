@@ -66,7 +66,9 @@ export async function fetchLatestInvoices() {
       LIMIT 5`
     );
 
-    const latestInvoices = data.map((invoice) => ({
+    console.log('Latest invoices:', data)
+
+    const latestInvoices = data[0].map((invoice) => ({
       ...invoice,
       amount: formatCurrency(invoice.amount),
     }));
