@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { getClient } = require('./pg-local');
+const { getClient } = require('./mysql-local');
 const {
   invoices,
   customers,
@@ -10,14 +10,14 @@ const bcrypt = require('bcrypt');
 
 async function seedUsers(client) {
   try {
-    await client.sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
     // Create the "users" table if it doesn't exist
     const createTable = await client.sql`
       CREATE TABLE IF NOT EXISTS users (
-        id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+        id VARCHAR(36) DEFAULT (UUID()) PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
-        email TEXT NOT NULL UNIQUE,
-        password TEXT NOT NULL
+        email TEXT NOT NULL,
+        password TEXT NOT NULL,
+        UNIQUE KEY unique_email (email(255))
       );
     `;
 
@@ -27,7 +27,10 @@ async function seedUsers(client) {
     const insertedUsers = await Promise.all(
       users.map(async (user) => {
         const hashedPassword = await bcrypt.hash(user.password, 10);
-        return client.sql`INSERT INTO users (id, name, email, password) VALUES (${user.id}, ${user.name}, ${user.email}, ${hashedPassword}) ON CONFLICT (id) DO NOTHING;`;
+        return client.sql`
+          INSERT IGNORE INTO users (id, name, email, password) 
+          VALUES (${user.id}, ${user.name}, ${user.email}, ${hashedPassword});
+        `;
       }),
     );
 
@@ -45,18 +48,17 @@ async function seedUsers(client) {
 
 async function seedInvoices(client) {
   try {
-    await client.sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
-
     // Create the "invoices" table if it doesn't exist
     const createTable = await client.sql`
-    CREATE TABLE IF NOT EXISTS invoices (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    customer_id UUID NOT NULL,
-    amount INT NOT NULL,
-    status VARCHAR(255) NOT NULL,
-    date DATE NOT NULL
-  );
-`;
+      CREATE TABLE IF NOT EXISTS invoices (
+        id VARCHAR(36) DEFAULT (UUID()) PRIMARY KEY,
+        customer_id VARCHAR(36) NOT NULL,
+        amount INT NOT NULL,
+        status VARCHAR(255) NOT NULL,
+        date DATE NOT NULL,
+        UNIQUE KEY unique_customer_id (customer_id(36))
+      );
+    `;
 
     console.log(`Created "invoices" table`);
 
@@ -64,10 +66,9 @@ async function seedInvoices(client) {
     const insertedInvoices = await Promise.all(
       invoices.map(
         (invoice) => client.sql`
-        INSERT INTO invoices (customer_id, amount, status, date)
-        VALUES (${invoice.customer_id}, ${invoice.amount}, ${invoice.status}, ${invoice.date})
-        ON CONFLICT (id) DO NOTHING;
-      `,
+          INSERT IGNORE INTO invoices (customer_id, amount, status, date)
+          VALUES (${invoice.customer_id}, ${invoice.amount}, ${invoice.status}, ${invoice.date});
+        `,
       ),
     );
 
@@ -85,15 +86,14 @@ async function seedInvoices(client) {
 
 async function seedCustomers(client) {
   try {
-    await client.sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
-
     // Create the "customers" table if it doesn't exist
     const createTable = await client.sql`
       CREATE TABLE IF NOT EXISTS customers (
-        id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+        id VARCHAR(36) DEFAULT (UUID()) PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         email VARCHAR(255) NOT NULL,
-        image_url VARCHAR(255) NOT NULL
+        image_url VARCHAR(255) NOT NULL,
+        UNIQUE KEY unique_email (email(255))
       );
     `;
 
@@ -103,10 +103,9 @@ async function seedCustomers(client) {
     const insertedCustomers = await Promise.all(
       customers.map(
         (customer) => client.sql`
-        INSERT INTO customers (id, name, email, image_url)
-        VALUES (${customer.id}, ${customer.name}, ${customer.email}, ${customer.image_url})
-        ON CONFLICT (id) DO NOTHING;
-      `,
+          INSERT IGNORE INTO customers (id, name, email, image_url)
+          VALUES (${customer.id}, ${customer.name}, ${customer.email}, ${customer.image_url});
+        `,
       ),
     );
 
@@ -138,10 +137,9 @@ async function seedRevenue(client) {
     const insertedRevenue = await Promise.all(
       revenue.map(
         (rev) => client.sql`
-        INSERT INTO revenue (month, revenue)
-        VALUES (${rev.month}, ${rev.revenue})
-        ON CONFLICT (month) DO NOTHING;
-      `,
+          INSERT IGNORE INTO revenue (month, revenue)
+          VALUES (${rev.month}, ${rev.revenue});
+        `,
       ),
     );
 

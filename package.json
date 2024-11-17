@@ -8,10 +8,11 @@
   "dependencies": {
     "@heroicons/react": "^2.1.4",
     "@tailwindcss/forms": "^0.5.7",
-    "@vercel/postgres": "^0.8.0",
     "autoprefixer": "10.4.19",
     "bcrypt": "^5.1.1",
     "clsx": "^2.1.1",
+    "dotenv": "^16.4.5",
+    "mysql2": "^3.11.4",
     "next": "^15.0.0",
     "next-auth": "5.0.0-beta.19",
     "pg": "^8.13.1",
