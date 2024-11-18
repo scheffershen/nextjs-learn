@@ -9,115 +9,110 @@ import {
 } from './definitions';
 import { formatCurrency } from './utils';
 
+interface DatabaseError extends Error {
+  code?: string;
+  errno?: number;
+  sqlState?: string;
+  sqlMessage?: string;
+}
+
+interface Customer extends CustomerField {
+  total_pending: number;
+  total_paid: number;
+}
+
 export async function fetchRevenue() {
   try {
     console.log('Fetching revenue data...');
-    
     const client = await getClient();
     
-    // Add debugging for client connection
-    console.log('Database client connected:', !!client);
+    const data = await client.sql`SELECT * FROM revenue`;
     
-    // MySQL version with better error handling and debugging
-    const data = await client.query('SELECT * FROM revenue');
-    
-    // Debug the response
-    console.log('Revenue data received:', {
-      rowCount: data?.length,
-      firstRow: data?.[0],
-      isArray: Array.isArray(data)
-    });
-
-    // Validate data
-    if (!data || data.length === 0) {
+    if (!data?.rows || data.rows.length === 0) {
       console.warn('No revenue data found in database');
-      return []; // Return empty array instead of null/undefined
+      return []; 
     }
 
-    console.log('Data fetch completed successfully');
-    return data;
-    
+    return data.rows;
   } catch (error) {
-    // Enhanced error logging
+    const dbError = error as DatabaseError;
     console.error('Database Error:', {
-      message: error.message,
-      code: error.code,
-      stack: error.stack
+      message: dbError.message,
+      code: dbError.code,
+      stack: dbError.stack
     });
-    throw new Error(`Failed to fetch revenue data: ${error.message}`);
-  } finally {
-    // Optional: Close client connection if needed
-    // await client?.end();
+    throw new Error(`Failed to fetch revenue data: ${dbError.message}`);
   }
 }
 
 export async function fetchLatestInvoices() {
   try {
-    console.log('Fetching latest invoice data...');
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-
     const client = await getClient();
-    // MySQL version - using parameterized query
-    const data = await client.query(`
-      SELECT invoices.amount, customers.name, customers.image_url, customers.email, invoices.id
-      FROM invoices
-      JOIN customers ON invoices.customer_id = customers.id
-      ORDER BY invoices.date DESC
-      LIMIT 5`
-    );
+    const data = await client.sql`
+      SELECT 
+        i.amount, 
+        c.name, 
+        c.image_url, 
+        c.email, 
+        i.id
+      FROM invoices i
+      JOIN customers c ON i.customer_id = c.id
+      ORDER BY i.date DESC
+      LIMIT 5
+    `;
 
-    console.log('Latest invoices:', data)
+    interface Invoice {
+      amount: number;
+      name: string;
+      image_url: string;
+      email: string;
+      id: string;
+    }
 
-    const latestInvoices = data[0].map((invoice) => ({
+    const latestInvoices = data.rows.map((invoice: Invoice) => ({
       ...invoice,
       amount: formatCurrency(invoice.amount),
     }));
-    console.log('Data fetch completed after 5 seconds.');
 
     return latestInvoices;
   } catch (error) {
-    console.error('Database Error:', error);
+    const dbError = error as DatabaseError;
+    console.error('Database Error:', dbError);
     throw new Error('Failed to fetch the latest invoices.');
   }
 }
 
-export async function fetchCardData() { //Parallel data fetching
+export async function fetchCardData() {
   try {
-    console.log('Fetching card data...');
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-
     const client = await getClient();
-    // You can probably combine these into a single SQL query
-    // However, we are intentionally splitting them to demonstrate
-    // how to initialize multiple queries in parallel with JS.
-    const invoiceCountPromise = client.query`
-      SELECT COALESCE(COUNT(*), 0) as total 
-      FROM invoices`;
 
-    const customerCountPromise = client.query`
-      SELECT COALESCE(COUNT(*), 0) as total 
-      FROM customers`;
+    const invoiceCountPromise = client.sql`
+      SELECT COUNT(*) as count 
+      FROM invoices
+    `;
 
-    // Optimize the status query using conditional aggregation
-    const invoiceStatusPromise = client.query`
+    const customerCountPromise = client.sql`
+      SELECT COUNT(*) as count 
+      FROM customers
+    `;
+
+    const invoiceStatusPromise = client.sql`
       SELECT 
-        COALESCE(SUM(IF(status = 'paid', amount, 0)), 0) AS paid,
-        COALESCE(SUM(IF(status = 'pending', amount, 0)), 0) AS pending
-      FROM invoices`;
+        SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) as paid,
+        SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) as pending
+      FROM invoices
+    `;
 
-    const data = await Promise.all([
+    const [invoiceCount, customerCount, invoiceStatus] = await Promise.all([
       invoiceCountPromise,
       customerCountPromise,
       invoiceStatusPromise,
     ]);
 
-    // Use the explicit column names from our queries
-    const numberOfInvoices = Number(data[0].rows[0].total);
-    const numberOfCustomers = Number(data[1].rows[0].total);
-    const totalPaidInvoices = formatCurrency(data[2].rows[0].paid);
-    const totalPendingInvoices = formatCurrency(data[2].rows[0].pending);
-
-    console.log('Data fetch completed after 3 seconds.');
+    const numberOfInvoices = Number(invoiceCount.rows[0].count ?? 0);
+    const numberOfCustomers = Number(customerCount.rows[0].count ?? 0);
+    const totalPaidInvoices = formatCurrency(invoiceStatus.rows[0].paid ?? 0);
+    const totalPendingInvoices = formatCurrency(invoiceStatus.rows[0].pending ?? 0);
 
     return {
       numberOfCustomers,
@@ -210,23 +205,26 @@ export async function fetchInvoicesPages(query: string) {
 export async function fetchInvoiceById(id: string) {
   try {
     const client = await getClient();
-    const data = await client.query<InvoiceForm>`
+    // MySQL version - using parameterized query
+    const data = await client.query(`
       SELECT
         invoices.id,
-        invoices.customer_id,
+        invoices.customer_id, 
         invoices.amount,
         invoices.status
-      FROM invoices
-      WHERE invoices.id = ${id};
-    `;
+      FROM invoices 
+      WHERE invoices.id = ?`,
+      [id]
+    );
 
-    const invoice = data.rows.map((invoice) => ({
-      ...invoice,
+    // MySQL returns array of rows directly
+    const invoice = data[0] && {
+      ...data[0],
       // Convert amount from cents to dollars
-      amount: invoice.amount / 100,
-    }));
+      amount: data[0].amount / 100,
+    };
 
-    return invoice[0];
+    return invoice;
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch invoice.');
@@ -254,8 +252,7 @@ export async function fetchCustomers() {
 export async function fetchFilteredCustomers(query: string) {
   try {
     const client = await getClient();
-    // MySQL version - using LIKE instead of ILIKE and proper parameterization
-    const data = await client.query(`
+    const data = await client.sql`
       SELECT
         customers.id,
         customers.name,
@@ -267,13 +264,13 @@ export async function fetchFilteredCustomers(query: string) {
       FROM customers
       LEFT JOIN invoices ON customers.id = invoices.customer_id
       WHERE
-        customers.name LIKE ? OR
-        customers.email LIKE ?
+        customers.name LIKE ${`%${query}%`} OR
+        customers.email LIKE ${`%${query}%`}
       GROUP BY customers.id, customers.name, customers.email, customers.image_url
       ORDER BY customers.name ASC
-    `, [`%${query}%`, `%${query}%`]);
+    `;
 
-    const customers = data.map((customer) => ({
+    const customers = data.rows.map((customer: Customer) => ({
       ...customer,
       total_pending: formatCurrency(customer.total_pending),
       total_paid: formatCurrency(customer.total_paid),

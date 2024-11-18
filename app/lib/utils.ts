@@ -31,7 +31,7 @@ export const generateYAxis = (revenue: Revenue[]) => {
   //console.log('Revenue data:', JSON.stringify(revenue, null, 2))
   
   // Log the mapped revenue values to verify the data
-  const revenueNumbers = revenue[0].map((month) => month.revenue)
+  const revenueNumbers = revenue.map((month) => month.revenue)
   console.log('Mapped revenue values:', revenueNumbers)
   
   // Check if all revenue values are valid numbers

@@ -156,6 +156,7 @@ async function seedRevenue(client) {
 }
 
 async function main() {
+  // Creates a singleton MySQL connection
   const client = await getClient();
 
   await seedUsers(client);

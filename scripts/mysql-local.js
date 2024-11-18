@@ -2,6 +2,7 @@ const mysql = require('mysql2/promise');
 
 let client = null;
 
+// Creates a singleton MySQL connection
 exports.getClient = async () => {
   if (!client) {
     client = await mysql.createConnection({
@@ -17,8 +18,17 @@ exports.getClient = async () => {
         throw new Error('sql is required');
       }
       const [query, params] = sqlTemplate(strings, ...values);
-      const [rows, fields] = await client.execute(query, params);
-      return { rows, fields };
+      try {
+        const [rows, fields] = await client.execute(query, params);
+        return { rows, fields };
+      } catch (err) {
+        // If connection lost, try to reconnect
+        if (err.code === 'PROTOCOL_CONNECTION_LOST') {
+          client = null;
+          return (await exports.getClient()).sql(strings, ...values);
+        }
+        throw err;
+      }
     };
   }
 
