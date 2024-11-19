@@ -45,7 +45,9 @@ export async function createInvoice(formData: FormData) {
     } catch (error) {
         // Handle validation and database errors appropriately
         console.error('Failed to create invoice:', error);
-        throw new Error('Failed to create invoice.');
+        return {
+            message: 'Database Error: Failed to Create Invoice.',
+        };
     }
 
     // Place these outside the try-catch block
@@ -76,11 +78,21 @@ export async function updateInvoice(formData: FormData) {
     `
   } catch (error) {
     console.error('Database Error:', error)
-    throw new Error('Failed to update invoice.')
+    return { message: 'Database Error: Failed to Update Invoice.' };
   }
 
   revalidatePath('/dashboard/invoices')
   redirect('/dashboard/invoices')
 }
 
-
+export async function deleteInvoice(id: string) {
+  try {
+    const client = await getClient();
+    await client.sql`DELETE FROM invoices WHERE id = ${id}`;
+    revalidatePath('/dashboard/invoices');
+    return { message: 'Invoice deleted.' };
+  } catch (error) {
+    console.error('Database Error:', error);
+    return { message: 'Database Error: Failed to Delete Invoice.' };
+  }
+}
