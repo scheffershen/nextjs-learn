@@ -23,14 +23,34 @@ const FormSchema = z.object({
 
 const CreateInvoice = FormSchema.omit({ id: true, date: true });
 
-export async function createInvoice(formData: FormData) {
+export type State = {
+    errors?: {
+      customerId?: string[];
+      amount?: string[];
+      status?: string[];
+    };
+    message?: string | null;
+};
+
+export async function createInvoice(prevState: State, formData: FormData) {
     try {
-        const { customerId, amount, status } = CreateInvoice.parse({
-          customerId: formData.get('customerId'),
-          amount: formData.get('amount'),
-          status: formData.get('status'),
+        // Validate form fields using Zod
+        const validatedFields = CreateInvoice.safeParse({
+            customerId: formData.get('customerId'),
+            amount: formData.get('amount'),
+            status: formData.get('status'),
         });
 
+        // If form validation fails, return errors early. Otherwise, continue.
+        if (!validatedFields.success) {
+            return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Missing Fields. Failed to Create Invoice.',
+            };
+        }
+
+        // Prepare data for insertion into the database
+        const { customerId, amount, status } = validatedFields.data;
         const amountInCents = amount * 100;
         const date = new Date().toISOString().split('T')[0];
 
