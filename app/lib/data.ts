@@ -203,6 +203,7 @@ export async function fetchInvoicesPages(query: string) {
 }
 
 export async function fetchInvoiceById(id: string) {
+  console.log(id);
   try {
     const client = await getClient();
     // MySQL version - using parameterized query
@@ -223,8 +224,15 @@ export async function fetchInvoiceById(id: string) {
       // Convert amount from cents to dollars
       amount: data[0].amount / 100,
     };
+    
+    if (invoice[0]) {
+      invoice[0].amount = Number((invoice[0].amount / 100).toFixed(2))
+    }
 
-    return invoice;
+    // log the invoice
+    console.log(invoice[0]);
+    
+    return invoice[0];
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch invoice.');

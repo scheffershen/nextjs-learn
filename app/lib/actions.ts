@@ -8,6 +8,7 @@ import { redirect } from 'next/navigation';
 import { getClient } from '../../scripts/mysql-local';
 
 const FormSchema = z.object({
+    id: z.string(),
     customerId: z.string({
         invalid_type_error: 'Please select a customer.',
     }),
@@ -17,21 +18,19 @@ const FormSchema = z.object({
     status: z.enum(['pending', 'paid'], {
         invalid_type_error: 'Please select an invoice status.',
     }),
-    date: z.string().optional(),
+    date: z.string(),
 })
 
-export async function createInvoice(formData: FormData) {
-    const rawFormData = {
-        customerId: formData.get('customerId'),
-        amount: formData.get('amount'),
-        status: formData.get('status'),
-        date: new Date().toISOString().split('T')[0]
-      };
-      // Test it out:
-    console.log(rawFormData);
+const CreateInvoice = FormSchema.omit({ id: true, date: true });
 
+export async function createInvoice(formData: FormData) {
     try {
-        const { customerId, amount, status } = FormSchema.parse(rawFormData);
+        const { customerId, amount, status } = CreateInvoice.parse({
+          customerId: formData.get('customerId'),
+          amount: formData.get('amount'),
+          status: formData.get('status'),
+        });
+
         const amountInCents = amount * 100;
         const date = new Date().toISOString().split('T')[0];
 
@@ -52,6 +51,36 @@ export async function createInvoice(formData: FormData) {
     // Place these outside the try-catch block
     revalidatePath('/dashboard/invoices');
     redirect('/dashboard/invoices');
+}
+
+const UpdateInvoice = FormSchema.omit({ date: true });
+
+export async function updateInvoice(formData: FormData) {
+  const { id, customerId, amount, status } = UpdateInvoice.parse({
+    id: formData.get('id'),
+    customerId: formData.get('customerId'),
+    amount: formData.get('amount'),
+    status: formData.get('status'),
+  })
+
+  const amountInCents = amount * 100
+
+  try {
+    const client = await getClient()
+    await client.sql`
+      UPDATE invoices
+      SET customer_id = ${customerId},
+          amount = ${amountInCents},
+          status = ${status}
+      WHERE id = ${id}
+    `
+  } catch (error) {
+    console.error('Database Error:', error)
+    throw new Error('Failed to update invoice.')
+  }
+
+  revalidatePath('/dashboard/invoices')
+  redirect('/dashboard/invoices')
 }
 
 
