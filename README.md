@@ -39,11 +39,39 @@ This is a modified version of the Next.js App Router Course dashboard applicatio
 
 ## Project Structure
 
-- `/app`: Application routes, components, and logic
-- `/app/lib`: Reusable utility functions and data fetching
+- `/app`: Directory - Main Application Code
+	- Core application structure using Next.js App Router
+	- Contains routes, layouts, and page components
+	- Example: page.tsx contains the landing page with Acme logo and login button
+- `/app/lib`: Directory - Core Utilities
+	- `data.ts`: Database query functions
+		- `fetchRevenue()`: Gets revenue data
+		- `fetchLatestInvoices()`: Gets recent invoices
+		- `fetchCardData()`: Gets dashboard statistics
+	- `actions.ts`: Server actions for form handling
+		- `createInvoice()`: Handles invoice creation
+	- `definitions.ts`: TypeScript type definitions
+		- Defines interfaces for Users, Customers, Invoices, etc.
+	- placeholder-data.ts: Sample data for development
 - `/app/ui`: UI components (cards, tables, forms)
+	- `/dashboard`: Dashboard-specific components
+			- `cards.tsx`: Statistics display cards
+			- `latest-invoices.tsx`: Recent invoices list
+	- `/invoices`: Invoice-related components
+		- `table.tsx`: Invoice listing table
+	- Common UI elements like buttons, forms, etc.
 - `/public`: Static assets
+	- Images (like hero-desktop.png, hero-mobile.png)
+	- Customer profile pictures
+	- Other static resources
 - `/scripts`: Database seeding and utility scripts
+	- `mysql-local.js`: Database connection management
+		- Creates singleton MySQL connection
+		- Handles SQL template literals
+		- Manages connection errors
+	- `seed.js`: Database seeding functionality
+		- Creates database tables
+		- Populates initial data
 
 ## Configuration Files
 
