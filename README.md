@@ -137,3 +137,5 @@ If you encounter database connection issues:
 To seed the database:
 
 	$ node scripts/seed.js
+
+## git diff > last-commit.log
