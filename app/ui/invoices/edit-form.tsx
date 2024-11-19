@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react'
 import { CustomerField, InvoiceForm } from '@/app/lib/definitions';
 import {
   CheckIcon,
@@ -9,7 +10,8 @@ import {
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { Button } from '@/app/ui/button';
-import { updateInvoice } from '@/app/lib/actions';
+import { updateInvoice, State } from '@/app/lib/actions';
+import { useActionState } from 'react';
 
 export default function EditInvoiceForm({
   invoice,
@@ -18,8 +20,60 @@ export default function EditInvoiceForm({
   invoice: InvoiceForm;
   customers: CustomerField[];
 }) {
+  // Add state for field errors
+  const [errors, setErrors] = useState({
+    customerId: '',
+    amount: '',
+    status: '',
+  })
+
+  // Add validation function
+  const handleSubmit = async (formData: FormData) => {
+    const rawFormData = {
+      customerId: formData.get('customerId'),
+      amount: formData.get('amount'),
+      status: formData.get('status'),
+    }
+
+    // Reset errors
+    setErrors({
+      customerId: '',
+      amount: '',
+      status: '',
+    })
+
+    // Validate fields
+    let hasErrors = false
+    if (!rawFormData.customerId) {
+      setErrors(prev => ({ ...prev, customerId: 'Please select a customer' }))
+      hasErrors = true
+    }
+    if (!rawFormData.amount || Number(rawFormData.amount) <= 0) {
+      setErrors(prev => ({ ...prev, amount: 'Please enter a valid amount' }))
+      hasErrors = true
+    }
+    if (!rawFormData.status) {
+      setErrors(prev => ({ ...prev, status: 'Please select an invoice status' }))
+      hasErrors = true
+    }
+
+    if (!hasErrors) {
+      // If no errors, proceed with form submission
+      await updateInvoice(formData)
+    }
+  }
+
+  // Add handler for amount changes
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    if (value && Number(value) > 0) {
+      // Clear amount error if value is valid
+      setErrors(prev => ({ ...prev, amount: '' }))
+    }
+  }
+
   return (
-    <form action={updateInvoice}>
+    <form action={handleSubmit}>
       <input type="hidden" name="id" value={invoice.id} />
       <div className="rounded-md bg-gray-50 p-4 md:p-6">
         {/* Customer Name */}
@@ -45,6 +99,9 @@ export default function EditInvoiceForm({
             </select>
             <UserCircleIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
           </div>
+          {errors.customerId && (
+            <div className="mt-2 text-sm text-red-500">{errors.customerId}</div>
+          )}          
         </div>
 
         {/* Invoice Amount */}
@@ -61,11 +118,15 @@ export default function EditInvoiceForm({
                 step="0.01"
                 defaultValue={invoice.amount}
                 placeholder="Enter USD amount"
+                onChange={handleAmountChange} 
                 className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
               />
               <CurrencyDollarIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
             </div>
           </div>
+          {errors.amount && (
+            <div className="mt-2 text-sm text-red-500">{errors.amount}</div>
+          )}
         </div>
 
         {/* Invoice Status */}
@@ -109,6 +170,9 @@ export default function EditInvoiceForm({
               </div>
             </div>
           </div>
+          {errors.status && (
+            <div className="mt-2 text-sm text-red-500">{errors.status}</div>
+          )}
         </fieldset>
       </div>
       <div className="mt-6 flex justify-end gap-4">
