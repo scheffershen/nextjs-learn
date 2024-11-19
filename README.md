@@ -92,6 +92,11 @@ If you need to reset the database:
 
 	$ node scripts/seed.js
 
+## Authentication
+
+Email: user@nextmail.com
+Password: 123456
+
 ## References
 
 - [Next.js Documentation](https://nextjs.org/docs)
