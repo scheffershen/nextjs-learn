@@ -23,7 +23,7 @@ interface Customer extends CustomerField {
 
 export async function fetchRevenue() {
   try {
-    console.log('Fetching revenue data...');
+    //console.log('Fetching revenue data...');
     const client = await getClient();
     
     const data = await client.sql`SELECT * FROM revenue`;

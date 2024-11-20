@@ -32,7 +32,7 @@ export const generateYAxis = (revenue: Revenue[]) => {
   
   // Log the mapped revenue values to verify the data
   const revenueNumbers = revenue.map((month) => month.revenue)
-  console.log('Mapped revenue values:', revenueNumbers)
+  //console.log('Mapped revenue values:', revenueNumbers)
   
   // Check if all revenue values are valid numbers
   if (revenueNumbers.some(val => typeof val !== 'number')) {
@@ -41,7 +41,7 @@ export const generateYAxis = (revenue: Revenue[]) => {
   }
 
   const highestRecord = Math.max(...revenueNumbers)
-  console.log('Highest record:', highestRecord)
+  //console.log('Highest record:', highestRecord)
 
   // Verify the calculation steps
   const topLabel = Math.ceil(highestRecord / 1000) * 1000
@@ -57,8 +57,8 @@ export const generateYAxis = (revenue: Revenue[]) => {
     yAxisLabels.push(`$${i / 1000}K`)
   }
 
-  console.log('Y-axis labels:', yAxisLabels)
-  console.log('Top label:', topLabel)
+  //console.log('Y-axis labels:', yAxisLabels)
+  //console.log('Top label:', topLabel)
   
   return { yAxisLabels, topLabel }
 };

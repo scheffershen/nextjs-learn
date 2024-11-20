@@ -175,3 +175,7 @@ graph LR
 - Checks `auth.config.ts` rules
 - Uses `auth.ts` to verify session
 - Handles redirects if needed
+
+4. Heriicons 
+   
+- https://heroicons.dev/
