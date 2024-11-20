@@ -2,7 +2,7 @@
 
 import { PencilIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
-import { deleteCustomer } from '@/app/lib/actions';
+import { deleteCustomer } from '@/app/lib/customers/actions';
 import { useFormState } from 'react-dom';
 
 export function CreateCustomer() {

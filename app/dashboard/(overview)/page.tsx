@@ -7,7 +7,7 @@ import {
   RevenueChartSkeleton,
   LatestInvoicesSkeleton,
   CardSkeleton
-} from '@/app/ui/skeletons';
+} from '@/app/ui/dashboard/skeletons';
 import { Metadata } from 'next';
  
 export const metadata: Metadata = {

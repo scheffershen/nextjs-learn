@@ -5,7 +5,7 @@
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { getClient } from '../../scripts/mysql-local';
+import { getClient } from '../../../scripts/mysql-local';
 
 const FormSchema = z.object({
     id: z.string(),
