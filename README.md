@@ -7,7 +7,7 @@ This is a modified version of the Next.js App Router Course dashboard applicatio
 1. Clone the repository
 2. Install dependencies:
 
-	$ npm i
+	$ pnpm i
 
 3. Set up MySQL database using Docker:
 
@@ -138,4 +138,40 @@ To seed the database:
 
 	$ node scripts/seed.js
 
-## git diff > last-commit.log
+## Create a git commit message with ChatGPT
+
+	$ git diff > last-changes.log
+
+## The authentication flow
+
+1. Request Flow:
+
+```mermaid
+graph LR
+    A[Request] --> B[middleware.ts]
+    B --> C{Protected Route?}
+    C -->|Yes| D[Check Auth]
+    C -->|No| E[Allow Access]
+    D -->|Authenticated| F[Allow Access]
+    D -->|Not Authenticated| G[Redirect to Login]
+```
+
+2. Login Flow:
+
+```mermaid
+graph LR
+    A[Login Form] --> B[auth.ts]
+    B --> C[Validate Credentials]
+    C --> D[Check Database]
+    D --> E[Verify Password]
+    E -->|Success| F[Create Session]
+    E -->|Failure| G[Return Error]
+```
+**https://mermaid.live/** for previewing the flowcharts
+
+3. Protection Logic:
+   
+- `middleware.ts` intercepts requests
+- Checks `auth.config.ts` rules
+- Uses `auth.ts` to verify session
+- Handles redirects if needed
