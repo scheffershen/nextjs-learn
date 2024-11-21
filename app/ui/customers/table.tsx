@@ -11,13 +11,13 @@ export default async function CustomersTable({
   currentPage: number;
 }) {
   const customers = await fetchFilteredCustomers(query, currentPage);
-
+  console.log('customers', customers);
   return (
     <div className="mt-6 flow-root">
       <div className="inline-block min-w-full align-middle">
         <div className="rounded-lg bg-gray-50 p-2 md:pt-0">
           <div className="md:hidden">
-            {customers[0]?.map((customer) => (
+            {customers?.map((customer) => (
               <div
                 key={customer.id}
                 className="mb-2 w-full rounded-md bg-white p-4"
@@ -46,10 +46,10 @@ export default async function CustomersTable({
                   </div>
                   <div className="flex justify-end gap-2">
                     <p className="text-sm text-gray-500">
-                      Pending: {formatCurrency(customer.total_pending)}
+                      Pending: {customer.total_pending}
                     </p>
                     <p className="text-sm text-gray-500">
-                      Paid: {formatCurrency(customer.total_paid)}
+                      Paid: {customer.total_paid}
                     </p>
                   </div>
                   <div className="flex justify-end gap-2">
@@ -84,7 +84,7 @@ export default async function CustomersTable({
               </tr>
             </thead>
             <tbody className="bg-white">
-              {customers[0]?.map((customer) => (
+              {customers?.map((customer) => (
                 <tr
                   key={customer.id}
                   className="w-full border-b py-3 text-sm last-of-type:border-none [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg"
@@ -108,10 +108,10 @@ export default async function CustomersTable({
                     {customer.total_invoices}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
-                    {formatCurrency(customer.total_pending)}
+                    {customer.total_pending}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
-                    {formatCurrency(customer.total_paid)}
+                    {customer.total_paid}
                   </td>
                   <td className="relative py-3 pl-6 pr-3">
                     <div className="flex justify-end gap-2">

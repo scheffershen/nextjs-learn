@@ -4,10 +4,15 @@ import { Customer, DatabaseError } from '../definitions';
 
 const ITEMS_PER_PAGE = 6;
 
-export async function fetchFilteredCustomers(query: string) {
+export async function fetchFilteredCustomers(
+    query: string,
+    currentPage: number
+) {
+ const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+
   try {
     const client = await getClient();
-    const data = await client.sql`
+    const [data] = await client.query(`
       SELECT
         customers.id,
         customers.name,
@@ -19,18 +24,26 @@ export async function fetchFilteredCustomers(query: string) {
       FROM customers
       LEFT JOIN invoices ON customers.id = invoices.customer_id
       WHERE
-        customers.name LIKE ${`%${query}%`} OR
-        customers.email LIKE ${`%${query}%`}
+        customers.name LIKE ? OR
+        customers.email LIKE ?
       GROUP BY customers.id, customers.name, customers.email, customers.image_url
       ORDER BY customers.name ASC
-    `;
+      LIMIT ? OFFSET ?`,
+      [
+        `%${query}%`,
+        `%${query}%`,
+        ITEMS_PER_PAGE,
+        offset
+      ]
+    );
 
-    const customers = data.rows.map((customer: Customer) => ({
+    //console.log('data', data);
+    const customers = data.map((customer: Customer) => ({
       ...customer,
       total_pending: formatCurrency(customer.total_pending),
       total_paid: formatCurrency(customer.total_paid),
     }));
-
+    //console.log('customers', customers);
     return customers;
   } catch (err) {
     console.error('Database Error:', err);

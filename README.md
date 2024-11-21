@@ -105,14 +105,10 @@ Password: 123456
 
 ## Version Information
 
-- Next.js: ^14.0.0
+- Next.js: ^15.0.0
 - Node.js: >=18.17.0
 - MySQL: 8.0
 - Docker Compose: v2.x
-
-## Last Updated
-
-10/2024
 
 ## Notes
 
